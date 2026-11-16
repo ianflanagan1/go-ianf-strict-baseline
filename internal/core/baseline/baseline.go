@@ -67,7 +67,7 @@ const WorkflowPath = ".github/workflows/check.yml"
 
 // CacheIgnore is the .gitignore line for the directory every project's
 // tools keep their caches in.
-// COUPLED:tool-cache-dir:[=; //github.com/ianflanagan1/code-rulebook/rulebook/rules/project/tool-caches-are-ignored.yaml; //github.com/ianflanagan1/code-rulebook/docs/baselines.md;
+// COUPLED:tool-cache-dir:[=; //github.com/ianflanagan1/code-rulebook/rulebook/setups/ianf-strict/rules/project/tool-caches-are-ignored.yaml; //github.com/ianflanagan1/code-rulebook/rulebook/setups/ianf-strict/baselines.md;
 // //github.com/ianflanagan1/ts-baseline/src/core/findProblems.ts; //github.com/ianflanagan1/php-baseline/src/Core/ProjectProblems.php]
 const CacheIgnore = "/cache/"
 
