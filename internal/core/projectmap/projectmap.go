@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/ianflanagan1/go-baseline/internal/core/baseline"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/baseline"
 )
 
 // Port is an interface an orchestrator declares, with the driven adapter

@@ -5,7 +5,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/ianflanagan1/go-baseline/internal/core/baseline"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/baseline"
 )
 
 // ConfigRead returns the analyzer that keeps configuration in the

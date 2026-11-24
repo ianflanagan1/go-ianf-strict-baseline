@@ -1,4 +1,4 @@
-// Package rulebook describes how go-baseline enforces each clause of the
+// Package rulebook describes how go-ianf-strict-baseline enforces each clause of the
 // code rulebook (github.com/ianflanagan1/code-rulebook), as
 // the coverage listing the rulebook checks.
 package rulebook
@@ -13,9 +13,9 @@ import (
 // rulebook to import.
 const ListingPath = "rulebook-coverage.json"
 
-// COUPLED:coverage-listing-shape:[same-shape; //github.com/ianflanagan1/code-rulebook/schema/coverage.schema.json; //github.com/ianflanagan1/code-rulebook/internal/core/rulebook/model.go;
-// //github.com/ianflanagan1/ts-baseline/src/core/listing.ts;
-// //github.com/ianflanagan1/php-baseline/src/Core/RulebookListing.php] fields, check kinds and coverage levels
+// COUPLED:coverage-listing-schema:[same-shape; //github.com/ianflanagan1/code-rulebook/schema/coverage.schema.json; //github.com/ianflanagan1/code-rulebook/internal/core/rulebook/model.go;
+// //github.com/ianflanagan1/ts-ianf-strict-baseline/src/core/listing.ts;
+// //github.com/ianflanagan1/php-ianf-strict-baseline/src/Core/RulebookListing.php] fields, check kinds and coverage levels
 type listing struct {
 	Language string `json:"language"`
 	Baseline string `json:"baseline"`
@@ -52,7 +52,7 @@ type claim struct {
 	Note   string `json:"note,omitempty"`
 }
 
-// COUPLED:coverage-listing-shape:END
+// COUPLED:coverage-listing-schema:END
 
 // Listing returns the coverage listing as JSON.
 func Listing() []byte {
@@ -109,7 +109,7 @@ func roles() map[string]string {
 func goBaseline() listing {
 	return listing{
 		Language:      "go",
-		Baseline:      "github.com/ianflanagan1/go-baseline",
+		Baseline:      "github.com/ianflanagan1/go-ianf-strict-baseline",
 		Roles:         roles(),
 		ReviewedRoles: []string{"entrypoint", "driving-adapter", "driven-adapter"},
 		Checks:        checks(),
@@ -137,8 +137,11 @@ func checks() map[string]check {
 		"gochecknoinits":      lint("Bans init functions everywhere."),
 		"gosec-unsafe":        lint("gosec's G103 reports each use of unsafe.Pointer and the unsafe package's functions, outside test files."),
 		"gosec-weak-random":   lint("gosec's G404 reports calls of the generators in math/rand and math/rand/v2, in every role, outside test files."),
-		"verify-dependencies": custom("verify follows go list -deps and reports a third-party package of the core or an orchestrator that imports an I/O package at any depth."),
+		"verify-dependencies": custom("verify follows go list -deps and reports a third-party package of an orchestrator that imports an I/O package at any depth."),
 		"coreboundary":        custom("Analyzer: a value passed to the core as an interface, function, type argument or field has a pure concrete type."),
+		"corereach": custom("Analyzer: runs on every package the project depends on, judging each function by its code in SSA, and reports a call in the core " +
+			"that reaches an impure operation outside the core, at any depth, and an import whose load-time code does, with the path to the operation. " +
+			"The standard library is judged by a list of its impure functions, methods, variables and packages."),
 		"portbranch":          custom("Analyzer: follows values read through a port and reports orchestrator conditions that depend on them."),
 		"configread":          custom("Analyzer: environment variables, flags and os.Args are read only in cmd/."),
 		"funlen-edges":        lint("funlen limits functions in adapters and cmd/ to 50 lines and 30 statements."),
@@ -174,6 +177,15 @@ const heldState = "Keeping state that changes across calls in an instance's fiel
 // dependency check follows only imports of the I/O packages.
 const unlistedEffects = "Only imports of the I/O packages are followed, so third-party code that reads the clock, prints or logs " +
 	"through the time, fmt, log or log/slog packages, which aren't on that list, isn't detected."
+
+// reachGap is the gap in the clauses about what the core calls and loads,
+// which the corereach analyzer checks.
+const reachGap = "A standard-library function is judged by go-ianf-strict-baseline's list of impure operations alone, and its body isn't followed, " +
+	"so one the list leaves out isn't reported, such as debug/elf.Open or crypto/x509.SystemCertPool, and nor is time.Parse reading the local time zone. " +
+	"A call through a field of a struct a function was passed is taken to be its caller's, and isn't followed to what was stored there. " +
+	"What a standard-library function calls on a value passed in an empty interface, such as json.Marshal calling a field's MarshalJSON, is followed only to the methods of a value boxed where it's passed. " +
+	"A method called on a value that can't be traced reaches only the implementations its package can see: not types declared inside a function, generic types, or those of packages that import it. " +
+	"State a third-party value keeps in its own fields between calls (held-state), starting goroutines, and channel operations, whose results depend on scheduling, aren't detected."
 
 // mainImportable is the gap in the clauses about referencing entrypoint
 // code: only its main packages can't be imported.
@@ -236,11 +248,15 @@ func roleClaims() map[string]claim {
 		"a-unit-of-code-holds-one-role": noneYet("A package's directory gives every declaration in it the one role, so the checks never see two roles in a package: " +
 			"a decision beside a value object under core/, or a pure function beside a store under adapters/driven/, is checked as its directory's role and isn't reported."),
 		"dependency-declarations-keep-their-role": {
-			Coverage: "partial", Checks: []string{"role-of", "coreboundary", "verify-dependencies"},
+			Coverage: "partial", Checks: []string{"role-of", "coreboundary", "corereach", "verify-dependencies"},
 			Gap: "A first-party dependency's packages get the roles their directories give, not the roles their code gives, and only the analyzers use them, " +
 				"so its core/ counts as the core. depguard's rules name only the project's own module: a project's core can import a dependency's orchestrator, " +
-				"and its driving adapter a dependency's driven adapter. Only an I/O import, at any depth, stops the core or an orchestrator importing a dependency's adapter.",
-			Proof:  []string{test("TestRolesFollowThePath"), analyzerTest("TestCoreBoundary"), test("TestIODependenciesOfTheCoreAreReportedEvenIndirectly")},
+				"and its driving adapter a dependency's driven adapter. Only an I/O import, at any depth, stops an orchestrator importing a dependency's adapter, " +
+				"and only reaching an impure operation stops the core calling or loading one.",
+			Proof: []string{
+				test("TestRolesFollowThePath"), analyzerTest("TestCoreBoundary"), analyzerTest("TestCoreReachesNothingImpure"),
+				test("TestIODependenciesOfAnOrchestratorAreReportedEvenIndirectly"),
+			},
 			Intent: "planned",
 		},
 		"other-roles-reach-only-members": {
@@ -259,7 +275,7 @@ func roleClaims() map[string]claim {
 		"driving-adapter-code-references-only-orchestrators-and-the-core": {
 			Coverage: "partial", Checks: []string{"depguard-driving-adapters", "entrypoint-unimportable"},
 			Gap: "A port is declared in its orchestrator's package, which a driving adapter may import, so one that references a port isn't reported. " +
-				"Nor is a driven adapter of another module, such as go-shared-code: the rule names only the project's own, whether or not the adapter is a system adapter that driving-adapter code may call. " +
+				"Nor is a driven adapter of another module, such as go-ianf-strict-shared-code: the rule names only the project's own, whether or not the adapter is a system adapter that driving-adapter code may call. " +
 				mainImportable,
 			Proof:  append(conformance("driving-adapter-code-references-only-orchestrators-and-the-core"), entrypointProof()),
 			Intent: "planned",
@@ -304,7 +320,6 @@ func roleClaims() map[string]claim {
 // coreClaims are the architecture clauses about the core's purity and what
 // crosses into it.
 func coreClaims() map[string]claim {
-	dependencies := []string{test("TestIODependenciesOfTheCoreAreReportedEvenIndirectly"), test("TestImpurePackagesIncludeThoseReachingIOThroughOthers")}
 	return map[string]claim{
 		"core-references-only-core": {Coverage: "full", Checks: []string{"depguard-core"}, Proof: conformance("core-references-only-core")},
 		"core-does-nothing-impure": {
@@ -315,14 +330,18 @@ func coreClaims() map[string]claim {
 			Note: "depguard bans the I/O packages, which include os (environment, files, standard streams), math/rand and crypto/rand; forbidigo bans the clock and printing, which live in pure packages, in a method as in a function.",
 		},
 		"core-calls-reach-nothing-impure": {
-			Coverage: "partial", Checks: []string{"verify-dependencies"}, Gap: unlistedEffects, Proof: dependencies, Intent: "planned",
-			Note: "go list -deps resolves the versions the project builds with, and following every import reaches further than following every call.",
+			Coverage: "partial", Checks: []string{"corereach"}, Gap: reachGap,
+			Proof: []string{analyzerTest("TestCoreReachesNothingImpure")}, Intent: "planned",
+			Note: "The analyzer runs on the packages go/packages loads, at the versions go.mod resolves, and judges first-party and third-party code alike, by its code. " +
+				"A call on a value the function built is resolved through SSA; on a value it can't trace, a method reaches every implementation its package can see, " +
+				"and a function value, such as one another function returned, is reported as one it can't show pure. Code behind a false constant is skipped.",
 		},
 		"core-loading-does-nothing-impure": {
-			Coverage: "partial", Checks: []string{"gochecknoinits", "gochecknoglobals", "verify-dependencies"},
-			Gap:   "A third-party package's load-time code is followed only through its imports. " + unlistedEffects,
-			Proof: append(conformance("core-loading-does-nothing-impure"), dependencies...), Intent: "planned",
-			Note: "The core's own load-time code would be its init functions and package-level variables' initialisers, which the linters ban.",
+			Coverage: "partial", Checks: []string{"gochecknoinits", "gochecknoglobals", "corereach"},
+			Gap:   "Load-time code is judged as functions are, with the same gaps. " + reachGap,
+			Proof: append(conformance("core-loading-does-nothing-impure"), analyzerTest("TestCoreReachesNothingImpure")), Intent: "planned",
+			Note: "Each package's initializer, its init functions and package-level variables' initialisers, is checked for every package the core imports at any depth, " +
+				"whether or not the core calls it. The core's own load-time code would be its init functions and initialisers, which the linters ban.",
 		},
 		"core-receives-only-pure-values": {Coverage: "full", Checks: []string{"coreboundary"}, Proof: []string{analyzerTest("TestCoreBoundary")}},
 		"the-core-takes-no-plain-data":   none(),
@@ -423,17 +442,17 @@ func operationClaims() map[string]claim {
 			Proof: append(conformance("adapters-and-entrypoints-perform-only-their-roles-operations"), analyzerTest("TestConfigRead")), Intent: "planned",
 		},
 		"adapters-and-entrypoints-reach-only-their-roles-operations": noneYet(
-			"verify-dependencies follows third-party imports only from the core and orchestrators, and asks only whether they reach I/O, not which operation."),
+			"verify-dependencies follows third-party imports only from orchestrators, and corereach follows calls only from the core; neither looks at what adapters or entrypoints reach."),
 		"reserved-operations-are-performed-only-by-their-system-adapters": {
 			Coverage: "partial", Checks: []string{"forbidigo-effects", "depguard-core", "depguard-orchestrators", "gosec-weak-random"},
 			Gap: "In the core and orchestrators the clock, the timers and both random packages are banned. Under adapters/ and cmd/ only math/rand is reported: " +
 				"an adapter or entrypoint that reads the clock, measures a duration, starts a timer or ticker or draws from crypto/rand isn't. " +
 				"Nowhere is a time zone read (time.Local, time.LoadLocation, the local result of time.Unix), a context given a deadline outside the core, or an ID laid out by hand, reported.",
 			Proof: conformance("reserved-operations-are-performed-only-by-their-system-adapters"), Intent: "planned",
-			Note: "No check exempts a system adapter by name: they are in go-shared-code, which a project's checks don't lint. " +
+			Note: "No check exempts a system adapter by name: they are in go-ianf-strict-shared-code, which a project's checks don't lint. " +
 				"gosec's message says to use crypto/rand, which is reserved too, and BASELINE.md still has a project write its own clock adapter.",
 		},
-		"no-third-party-feature-performs-a-reserved-operation":                         noneYet("go-baseline has no dependency list to name each release unit's banned features."),
+		"no-third-party-feature-performs-a-reserved-operation":                         noneYet("go-ianf-strict-baseline has no dependency list to name each release unit's banned features."),
 		"standard-library-and-third-party-code-takes-sources-from-the-system-adapters": none(),
 		"nothing-sleeps": {
 			Coverage: "partial", Checks: []string{"forbidigo-effects"},
@@ -448,7 +467,7 @@ func operationClaims() map[string]claim {
 		"external-driven-adapters-take-no-internal-values":                none(),
 		"only-decisions-and-internal-adapters-read-internal-values":       none(),
 		"the-internal-wrapper-shows-nothing-it-holds": noneYet(
-			"It is to be shown by tests of the wrapper in go-shared-code, one for each of its text, debug, JSON and logged forms, not by a check of projects."),
+			"It is to be shown by tests of the wrapper in go-ianf-strict-shared-code, one for each of its text, debug, JSON and logged forms, not by a check of projects."),
 	}
 }
 
@@ -698,7 +717,7 @@ func projectClaims() map[string]claim {
 			Coverage: "partial", Checks: []string{"verify-config"}, Gap: secondConfig,
 			Proof:  []string{test("TestALinterConfigWeakerThanTheBaselinesIsReported"), test("TestAnEditedConfigIsReported")},
 			Intent: "planned",
-			Note:   "Within .golangci.yml verify is stricter than the clause: a project can't add a linter or tighten a setting there either; that changes in go-baseline.",
+			Note:   "Within .golangci.yml verify is stricter than the clause: a project can't add a linter or tighten a setting there either; that changes in go-ianf-strict-baseline.",
 		},
 		"checks-are-not-suppressed": {
 			Coverage: "partial", Checks: []string{"verify-config"},
@@ -716,7 +735,7 @@ func projectClaims() map[string]claim {
 				"verify is itself a step of the check task, and nothing outside the repository runs it.",
 		},
 		"every-third-party-dependency-is-listed": noneYet(
-			"go-baseline has no dependency list. verify-dependencies rejects only a third-party package that reaches an I/O package from the core or an orchestrator."),
+			"go-ianf-strict-baseline has no dependency list. verify-dependencies rejects only a third-party package that reaches an I/O package from an orchestrator, and corereach only code the core calls or loads that reaches an impure operation."),
 		"at-most-one-listed-dependency-per-capability": none(),
 	}
 }

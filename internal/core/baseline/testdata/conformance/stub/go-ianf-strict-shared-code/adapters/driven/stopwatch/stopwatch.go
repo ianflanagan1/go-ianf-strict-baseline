@@ -1,4 +1,4 @@
-// Package stopwatch stands in for go-shared-code's system stopwatch, so the
+// Package stopwatch stands in for go-ianf-strict-shared-code's system stopwatch, so the
 // conformance fixture needs no network.
 package stopwatch
 

@@ -1,6 +1,6 @@
 # Analyzers and verify steps to build
 
-Every analyzer and `verify` step of its own that go-baseline still needs, so that each can be built and tested alone. The tests in `internal/core/rulebook/checkstobuild_test.go` keep the list in step with the listing and with the checks that exist.
+Every analyzer and `verify` step of its own that go-ianf-strict-baseline still needs, so that each can be built and tested alone. The tests in `internal/core/rulebook/checkstobuild_test.go` keep the list in step with the listing and with the checks that exist.
 
 ## Keeping the list
 
@@ -17,7 +17,7 @@ The heading is the name the check will be declared with: an analyzer's function 
 - **Reports:** what it must report.
 - **Allows:** what it must not report.
 - **Fixtures:** the code to prove it with: the clauses' violations, and the code it must pass.
-- **Why no existing tool:** why the compiler, golangci-lint's linters and go-baseline's own checks don't reach it.
+- **Why no existing tool:** why the compiler, golangci-lint's linters and go-ianf-strict-baseline's own checks don't reach it.
 - **Needs first:** what must exist or be decided before it can be built, if anything.
 - **Specified in:** another document that already says what the check must do. An entry with this line may leave out the four lines it replaces.
 
@@ -164,7 +164,7 @@ A check that applies to some roles takes each package's role from `RoleOf`, by i
 - **Allows:** every use inside the type's own package, which is `OneConstructionSite`'s; `*T` and `nil` outside it.
 - **Fixtures:** the `hidden-fields` case's violations except the panic, which is `NoPanic`'s; the second clause's violations that Go can write; and a driven adapter that returns the `*Order` a factory function gave it.
 - **Why no existing tool:** the compiler stops another package setting an unexported field, and not from taking the zero value or converting to the type.
-- **Specified in:** code-rulebook `rulebook/rules/design/constructors-only-store.yaml`, the `TODO(go-baseline)` comment, for the second clause.
+- **Specified in:** code-rulebook `rulebook/rules/design/constructors-only-store.yaml`, the `TODO(go-ianf-strict-baseline)` comment, for the second clause.
 
 ### OneConstructionSite
 
@@ -207,7 +207,7 @@ A check that applies to some roles takes each package's role from `RoleOf`, by i
 
 - **Clauses:** `driving-adapter-code-calls-no-driven-adapter`, `driven-adapter-code-calls-no-orchestrator`
 - **Reports:** a value whose type a package under `adapters/driven/` declares, given to driving-adapter code: passed as an argument to a function or method of a package under `adapters/driving/`, or stored in a field of one of its structs. In the same way, a value whose type a package under `orchestrators/` declares, given to driven-adapter code. It finds each as `CoreBoundary` finds what is passed to the core, with an interface, a function value or a closure that holds one included.
-- **Allows:** an orchestrator given to a driving adapter; a driven adapter given to an orchestrator; the system adapters the vocabulary says driving-adapter code also calls, the stopwatch and the deadlines, by their full names in go-shared-code.
+- **Allows:** an orchestrator given to a driving adapter; a driven adapter given to an orchestrator; the system adapters the vocabulary says driving-adapter code also calls, the stopwatch and the deadlines, by their full names in go-ianf-strict-shared-code.
 - **Fixtures:** both clauses' violations, the controller given the system clock among them, and a driving adapter given the system stopwatch.
 - **Why no existing tool:** depguard reports an import, and a driving adapter that declares an interface of its own imports nothing to be given a driven adapter through it.
 
@@ -233,13 +233,6 @@ A check that applies to some roles takes each package's role from `RoleOf`, by i
 - **Why no existing tool:** golangci-lint has no setting that refuses a second configuration file, and one would be in the file a project can replace.
 - **Specified in:** code-rulebook `docs/plans.md`, "Checks at full strength", the effective-settings comparison, whose other reports `verify` already makes by comparing `.golangci.yml` byte for byte.
 
-### CoreReachesNothingImpure
-
-- **Clauses:** `core-calls-reach-nothing-impure`, `core-loading-does-nothing-impure`
-- **Fixtures:** testdata modules for a pure third-party package the core calls, which must pass; one whose function calls `time.Now` two packages deep; one that prints with `fmt.Println`; one whose function writes a package-level map it keeps as a cache; one whose `init` reads an environment variable, which the core imports and never calls; one that imports `os` but whose function the core calls reaches no `os` call, which must pass; one that calls a method on an interface value it builds itself, whose implementation reads the clock; and one that calls a function value it was passed, which must pass.
-- **Needs first:** no new driver, since facts already reach every dependency: `analyse` gives `All` to `gopackages.Analyze`, which loads with `packages.LoadAllSyntax` and calls `checker.Analyze`, and `checker` runs an analyzer that declares `FactTypes` on every package the roots import, at any depth, third-party and standard-library packages included, as `analysistest.Run` does in the tests. Four things to decide: whether a standard-library function is a leaf, judged only by the map of impure operations, or followed into its body, where `unsafe`, `sync.Pool` and the runtime would mark `fmt.Sprintf` impure, and with that whether `os` in the map takes in `os/user` and `os/signal`; what a dynamic call on a value the code built itself reaches when SSA can't resolve it, since a fact-based pass sees only the packages below it and not every implementation in the program, so it is either reported as unresolved or needs a whole-program pass as `RoleProblems` does; whether every run analyses every dependency again until verdicts are cached by module version and `go.sum` entry; and which of the clause and the plan to follow where they differ: `core-calls-reach-nothing-impure`'s fourth violation counts an implementation the code didn't build, where the plan resolves the one it built.
-- **Specified in:** code-rulebook `docs/plans.md`, "Purity of what the core reaches", "The method" and "Go", which replaces `verify-dependencies`' import-following for these two clauses.
-
 ## Waiting on a decision
 
 ### CatchAll
@@ -255,11 +248,11 @@ A check that applies to some roles takes each package's role from `RoleOf`, by i
 ### InvocationCatchAll
 
 - **Clauses:** `driving-adapter-catches-each-invocation`
-- **Reports:** in packages under `adapters/driving/`: an `http.Server` built with, or `http.ListenAndServe` or `http.Serve` called with, a handler that isn't what the project's catch-all returned; a `go` statement whose function doesn't defer the catch-all; and a function given to go-shared-code's system timer that doesn't run each pass inside it.
+- **Reports:** in packages under `adapters/driving/`: an `http.Server` built with, or `http.ListenAndServe` or `http.Serve` called with, a handler that isn't what the project's catch-all returned; a `go` statement whose function doesn't defer the catch-all; and a function given to go-ianf-strict-shared-code's system timer that doesn't run each pass inside it.
 - **Allows:** a command line, whose only invocation is the whole run. A consumer's loop over messages, and another framework's start of an invocation, aren't found, and stay the gap.
 - **Fixtures:** the clause's second, third and fourth violations, and a server whose handler is wrapped.
 - **Why no existing tool:** no linter knows which function is the catch-all, or where an invocation starts.
-- **Needs first:** how a project marks its invocation catch-all, as for `CatchAll`; and go-shared-code's system timer, for the last report.
+- **Needs first:** how a project marks its invocation catch-all, as for `CatchAll`; and go-ianf-strict-shared-code's system timer, for the last report.
 - **Specified in:** code-rulebook `TO-IMPLEMENT.md`, "Errors: catching and throwing by role", which expects `partial` for one framework.
 
 ### ConstructorBody
@@ -385,7 +378,7 @@ A check that applies to some roles takes each package's role from `RoleOf`, by i
 ### InternalValue
 
 - **Clauses:** `outside-facing-code-names-no-internal-type`, `external-driving-adapters-get-no-internal-values`, `external-driving-adapters-get-no-internal-values-from-decisions`, `external-driven-adapters-take-no-internal-values`, `only-decisions-and-internal-adapters-read-internal-values`
-- **Needs first:** go-shared-code's shared ID package, with the Internal wrapper, and the baseline's capability list, which says whether an adapter is internal or external.
+- **Needs first:** go-ianf-strict-shared-code's shared ID package, with the Internal wrapper, and the baseline's capability list, which says whether an adapter is internal or external.
 - **Specified in:** code-rulebook `docs/plans.md`, "Identity and the schema", the internal-values checks: a reference ban, a crossing check and a call-site check, which may be three analyzers.
 
 ### IDType
@@ -395,7 +388,7 @@ A check that applies to some roles takes each package's role from `RoleOf`, by i
 - **Allows:** an ID type built on the shared ID package.
 - **Fixtures:** both clauses' violations that are in code and not in a schema.
 - **Why no existing tool:** no linter knows which strings are IDs.
-- **Needs first:** go-shared-code's shared ID package, and a way to tell which values are IDs, such as a field named `id` or ending `ID`.
+- **Needs first:** go-ianf-strict-shared-code's shared ID package, and a way to tell which values are IDs, such as a field named `id` or ending `ID`.
 - **Specified in:** code-rulebook `docs/plans.md`, "Identity and the schema", the static checks.
 
 ### ListedDependencyProblems
@@ -403,7 +396,7 @@ A check that applies to some roles takes each package's role from `RoleOf`, by i
 - **Clauses:** `every-third-party-dependency-is-listed`, `at-most-one-listed-dependency-per-capability`, `orchestrator-code-reaches-nothing-impure`, `adapters-and-entrypoints-reach-only-their-roles-operations`
 - **Reports:** from `go list -deps`: a third-party package the project's code imports whose module the baseline's dependency list doesn't have; one that the list gives an impure operation the importing package's role may not perform, at any depth of import; and two entries of one capability that the project uses, the standard library's entries such as `log` and `log/slog` included.
 - **Allows:** a listed module whose operations the importing role may perform; a standard-library package the list doesn't name.
-- **Fixtures:** the four clauses' violations that Go can write, and an orchestrator importing a listed module whose entry gives it no impure operation. What the core reaches is `CoreReachesNothingImpure`'s, judged from the code rather than from the list.
+- **Fixtures:** the four clauses' violations that Go can write, and an orchestrator importing a listed module whose entry gives it no impure operation. What the core reaches is the corereach analyzer's, judged from the code rather than from the list.
 - **Why no existing tool:** `DependencyProblems` asks only whether a third-party package of the core or an orchestrator reaches an I/O package, not which operation it performs or whether anyone vetted it, and depguard's lists have no capabilities.
 - **Needs first:** the baseline's dependency list and capability list, in the form code-rulebook's `docs/baselines.md` gives.
 
@@ -414,4 +407,4 @@ A check that applies to some roles takes each package's role from `RoleOf`, by i
 - **Allows:** a literal that sets each such field. Whether what it is given asks the system adapter isn't checked, and stays the gap.
 - **Fixtures:** the clause's violations, and a `tls.Config` with both fields set.
 - **Why no existing tool:** no linter requires one field to be set in a literal of one type.
-- **Needs first:** go-shared-code's system clock and system random source, which are what code passes; and the baseline's dependency list, for the third-party types.
+- **Needs first:** go-ianf-strict-shared-code's system clock and system random source, which are what code passes; and the baseline's dependency list, for the third-party types.

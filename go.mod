@@ -1,8 +1,8 @@
-module github.com/ianflanagan1/go-baseline
+module github.com/ianflanagan1/go-ianf-strict-baseline
 
 go 1.27
 
-tool github.com/ianflanagan1/go-baseline/cmd/go-baseline
+tool github.com/ianflanagan1/go-ianf-strict-baseline/cmd/go-ianf-strict-baseline
 
 require (
 	golang.org/x/tools v0.52.0

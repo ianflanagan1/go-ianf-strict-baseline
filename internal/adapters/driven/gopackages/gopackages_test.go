@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianflanagan1/go-baseline/internal/adapters/driven/gopackages"
-	"github.com/ianflanagan1/go-baseline/internal/core/analyzers"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/adapters/driven/gopackages"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/analyzers"
 )
 
 // module writes a module to a temporary directory, from file names and

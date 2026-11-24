@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianflanagan1/go-baseline/internal/core/rulebook"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/rulebook"
 )
 
 const moduleRoot = "../../.."

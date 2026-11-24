@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianflanagan1/go-baseline/internal/core/baseline"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/baseline"
 )
 
 const goMod = "module example.com/app\n\ngo 1.27\n"
@@ -199,7 +199,7 @@ func TestALinterConfigWeakerThanTheBaselinesIsReported(t *testing.T) {
 // generates.
 func TestACheckTaskThatRunsLessThanTheBaselinesIsReported(t *testing.T) {
 	for _, tc := range []struct{ name, from, to string }{
-		{"it doesn't run verify", "      - go tool go-baseline verify\n", ""},
+		{"it doesn't run verify", "      - go tool go-ianf-strict-baseline verify\n", ""},
 		{"it lints only part of the code", "      - golangci-lint run\n", "      - golangci-lint run ./internal/...\n"},
 		{"a step ignores its exit status", "      - golangci-lint run\n", "      - golangci-lint run || true\n"},
 		{"it lints with another configuration file", "      - golangci-lint run\n", "      - golangci-lint run --config lenient.yml\n"},
@@ -236,12 +236,12 @@ func TestDevboxDriftIsReported(t *testing.T) {
 		{"go pinned to a minor version", `"go@1.27.3"`, `"go@1.27"`, "pin Go"},
 		{"another golangci-lint", "golangci-lint@" + baseline.GolangciLintVersion, "golangci-lint@2.0.0", "golangci-lint@"},
 		{"go pinned to another minor version than the toolchain", `"go@1.27.3"`, `"go@1.26.5"`, "Go 1.27"},
-		{"no GOTOOLCHAIN", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"OTHER": "x"`, "go tool go-baseline write"},
-		{"the toolchain devbox installs", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "local"`, "go tool go-baseline write"},
-		{"any toolchain go.mod asks for", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "auto"`, "go tool go-baseline write"},
-		{"a newer toolchain if go.mod asks", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `+auto"`, "go tool go-baseline write"},
-		{"the toolchain on the PATH if go.mod asks", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `+path"`, "go tool go-baseline write"},
-		{"another toolchain", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "go1.27.0"`, "go tool go-baseline write"},
+		{"no GOTOOLCHAIN", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"OTHER": "x"`, "go tool go-ianf-strict-baseline write"},
+		{"the toolchain devbox installs", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "local"`, "go tool go-ianf-strict-baseline write"},
+		{"any toolchain go.mod asks for", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "auto"`, "go tool go-ianf-strict-baseline write"},
+		{"a newer toolchain if go.mod asks", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `+auto"`, "go tool go-ianf-strict-baseline write"},
+		{"the toolchain on the PATH if go.mod asks", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `+path"`, "go tool go-ianf-strict-baseline write"},
+		{"another toolchain", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "go1.27.0"`, "go tool go-ianf-strict-baseline write"},
 		{"another go-task", "go-task@" + baseline.TaskVersion, "go-task@3.0.0", "go-task@"},
 		{"no coupled-tags-lint", `, "` + baseline.CoupledTagsLintPackage + `"`, "", baseline.CoupledTagsLintPackage},
 		{"a devbox script", `"env"`, `"shell": {"scripts": {"build": "go build ./..."}}, "env"`, `script "build": move it`},
@@ -461,9 +461,9 @@ func TestRolesHaveNames(t *testing.T) {
 	}
 }
 
-// goList is `go list -deps -json` output for an application whose core reaches a
-// third-party package that does I/O through another one, and whose adapter
-// uses an I/O package directly.
+// goList is `go list -deps -json` output for an application whose core and
+// orchestrator reach a third-party package that does I/O through another
+// one, and whose adapter uses an I/O package directly.
 const goList = `{"ImportPath": "os", "Standard": true}
 {"ImportPath": "fmt", "Standard": true, "Imports": ["os"]}
 {"ImportPath": "example.com/leaf", "Imports": ["net/http", "net/url"], "Module": {"Path": "example.com/leaf"}}
@@ -471,7 +471,7 @@ const goList = `{"ImportPath": "os", "Standard": true}
 {"ImportPath": "example.com/pure", "Imports": ["fmt"], "Module": {"Path": "example.com/pure"}}
 {"ImportPath": "example.com/sdk", "Imports": ["os"], "Module": {"Path": "example.com/sdk"}}
 {"ImportPath": "example.com/app/internal/core/rates", "Imports": ["example.com/mid", "example.com/pure", "fmt"], "Module": {"Path": "example.com/app"}}
-{"ImportPath": "example.com/app/internal/orchestrators/app", "Imports": ["example.com/app/internal/core/rates"], "Module": {"Path": "example.com/app"}}
+{"ImportPath": "example.com/app/internal/orchestrators/app", "Imports": ["example.com/app/internal/core/rates", "example.com/mid"], "Module": {"Path": "example.com/app"}}
 {"ImportPath": "example.com/app/internal/adapters/driven/store", "Imports": ["example.com/sdk", "os"], "Module": {"Path": "example.com/app"}}
 {"ImportPath": "example.com/app/cmd/app", "Imports": ["example.com/app/internal/orchestrators/app", "example.com/app/internal/adapters/driven/store"], "Module": {"Path": "example.com/app"}}
 `
@@ -485,11 +485,13 @@ func parsedGoList(t *testing.T) []baseline.Package {
 	return packages
 }
 
-func TestIODependenciesOfTheCoreAreReportedEvenIndirectly(t *testing.T) {
+// The corereach analyzer judges what the core reaches by what its code
+// does, so verify doesn't follow the core's imports.
+func TestTheCoresImportsAreNotFollowed(t *testing.T) {
 	problems := baseline.DependencyProblems("example.com/app", parsedGoList(t))
-	want := "example.com/app/internal/core/rates depends on example.com/leaf, which imports net/http"
+	want := "example.com/app/internal/orchestrators/app depends on example.com/leaf, which imports net/http"
 	if len(problems) != 1 || !strings.HasPrefix(problems[0], want) {
-		t.Fatalf("got %q, want one problem starting %q", problems, want)
+		t.Fatalf("got %q, want only the orchestrator's problem, starting %q", problems, want)
 	}
 }
 

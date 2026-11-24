@@ -11,15 +11,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianflanagan1/go-baseline/internal/core/rulebook"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/rulebook"
 )
 
-// checksToBuildPath is the list of analyzers and verify steps go-baseline
+// checksToBuildPath is the list of analyzers and verify steps go-ianf-strict-baseline
 // still needs, from the module's root. These tests keep it in step with the
 // listing and with the checks that exist.
 const checksToBuildPath = "docs/analyzers-and-verify-steps-to-build.md"
 
-// checkDirs are the packages that declare go-baseline's own checks: an
+// checkDirs are the packages that declare go-ianf-strict-baseline's own checks: an
 // analyzer is a function in the first, a verify step a function in the second.
 func checkDirs() []string {
 	return []string{"internal/core/analyzers", "internal/core/baseline"}

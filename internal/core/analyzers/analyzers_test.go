@@ -5,7 +5,7 @@ import (
 
 	"golang.org/x/tools/go/analysis/analysistest"
 
-	"github.com/ianflanagan1/go-baseline/internal/core/analyzers"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/analyzers"
 )
 
 func project() analyzers.Project {
@@ -29,14 +29,19 @@ func TestConfigRead(t *testing.T) {
 
 func TestTheEnvAdapterMayReadConfiguration(t *testing.T) {
 	analysistest.Run(t, analysistest.TestData(), analyzers.ConfigRead(analyzers.Project{
-		Module: "github.com/ianflanagan1/go-shared-code",
+		Module: "github.com/ianflanagan1/go-ianf-strict-shared-code",
 	}), analyzers.EnvAdapter)
 }
 
 func TestAllReturnsEveryAnalyzer(t *testing.T) {
-	if got := len(analyzers.All(project())); got != 5 {
-		t.Fatalf("got %d analyzers, want 5", got)
+	if got := len(analyzers.All(project())); got != 6 {
+		t.Fatalf("got %d analyzers, want 6", got)
 	}
+}
+
+func TestCoreReachesNothingImpure(t *testing.T) {
+	analysistest.Run(t, analysistest.TestData(), analyzers.CoreReachesNothingImpure(project()),
+		"example.com/app/internal/core/reach")
 }
 
 func TestNoDefault(t *testing.T) {

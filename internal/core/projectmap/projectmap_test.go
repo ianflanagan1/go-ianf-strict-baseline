@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianflanagan1/go-baseline/internal/core/baseline"
-	"github.com/ianflanagan1/go-baseline/internal/core/projectmap"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/baseline"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/projectmap"
 )
 
 // sources returns a command, in dependency order.

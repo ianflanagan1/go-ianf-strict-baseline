@@ -1,4 +1,4 @@
-# go-baseline
+# go-ianf-strict-baseline
 
 See README.md. `devbox run -- task check` runs everything, and must pass before finishing a change.
 

@@ -1,4 +1,4 @@
-// Command go-baseline keeps a Go project on the settings every project
+// Command go-ianf-strict-baseline keeps a Go project on the settings every project
 // shares. `write` generates .golangci.yml from go.mod, and BASELINE.md, and
 // pins GOTOOLCHAIN in devbox.json;
 // `verify` fails when the project has drifted from the baseline, breaks an
@@ -21,19 +21,19 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/ianflanagan1/go-baseline/internal/adapters/driven/gopackages"
-	"github.com/ianflanagan1/go-baseline/internal/core/analyzers"
-	"github.com/ianflanagan1/go-baseline/internal/core/baseline"
-	"github.com/ianflanagan1/go-baseline/internal/core/projectmap"
-	"github.com/ianflanagan1/go-baseline/internal/core/rulebook"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/adapters/driven/gopackages"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/analyzers"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/baseline"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/projectmap"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/rulebook"
 	"golang.org/x/vuln/scan"
 )
 
-const usage = "usage: go-baseline write | verify | test | map | rulebook"
+const usage = "usage: go-ianf-strict-baseline write | verify | test | map | rulebook"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
-		fmt.Fprintln(os.Stderr, "go-baseline:", err)
+		fmt.Fprintln(os.Stderr, "go-ianf-strict-baseline:", err)
 		os.Exit(1)
 	}
 }
@@ -193,7 +193,7 @@ func tidyProblems() ([]string, error) {
 
 // deadcode reports the functions under cmd/ and internal/ that no program in
 // cmd/ reaches. A module without a program has nothing to reach them from. It
-// runs the deadcode in the x/tools that go-baseline requires.
+// runs the deadcode in the x/tools that go-ianf-strict-baseline requires.
 func deadcode(p baseline.Project) ([]string, error) {
 	module, err := baseline.ModulePath(p.GoMod)
 	if err != nil {
@@ -242,7 +242,7 @@ func analyse(p baseline.Project) ([]string, error) {
 }
 
 // baselineModules returns the modules, from their directories, whose
-// .golangci.yml go-baseline generated.
+// .golangci.yml go-ianf-strict-baseline generated.
 func baselineModules(dirs map[string]string) (map[string]bool, error) {
 	onBaseline := map[string]bool{}
 	for module, dir := range dirs {

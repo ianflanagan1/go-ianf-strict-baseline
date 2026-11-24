@@ -6,7 +6,7 @@ package timed
 import (
 	"time"
 
-	"github.com/ianflanagan1/go-shared-code/adapters/driven/stopwatch"
+	"github.com/ianflanagan1/go-ianf-strict-shared-code/adapters/driven/stopwatch"
 
 	"example.com/conformance/internal/orchestrators/app"
 )

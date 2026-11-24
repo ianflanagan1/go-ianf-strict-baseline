@@ -1,4 +1,4 @@
-// Package analyzers holds the checks go-baseline runs on a project's code:
+// Package analyzers holds the checks go-ianf-strict-baseline runs on a project's code:
 // rules that golangci-lint's linters can't express because they need the
 // project's roles, or which of its types are its own.
 package analyzers
@@ -10,12 +10,12 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/ianflanagan1/go-baseline/internal/core/baseline"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/baseline"
 )
 
 // EnvAdapter is the shared adapter for the process environment, which only an
 // entrypoint may use.
-const EnvAdapter = "github.com/ianflanagan1/go-shared-code/adapters/driven/env"
+const EnvAdapter = "github.com/ianflanagan1/go-ianf-strict-shared-code/adapters/driven/env"
 
 // Project is what the analyzers need to know about the project under
 // analysis.
@@ -24,7 +24,7 @@ type Project struct {
 	// Impure lists the third-party packages that do I/O, from
 	// baseline.ImpurePackages.
 	Impure map[string]bool
-	// BaselineModules lists the other modules on go-baseline. Their
+	// BaselineModules lists the other modules on go-ianf-strict-baseline. Their
 	// directories give their packages roles, as the project's own do, and
 	// their core counts as core: what the project passes it is checked as if
 	// it were the project's own core.
@@ -33,7 +33,9 @@ type Project struct {
 
 // All returns every analyzer for p.
 func All(p Project) []*analysis.Analyzer {
-	return []*analysis.Analyzer{CoreBoundary(p), ConfigRead(p), PortBranch(p), NoDefault(p), SumTypeDecl(p)}
+	return []*analysis.Analyzer{
+		CoreBoundary(p), ConfigRead(p), PortBranch(p), NoDefault(p), SumTypeDecl(p), CoreReachesNothingImpure(p),
+	}
 }
 
 // role returns the role of the package at importPath, and false when the

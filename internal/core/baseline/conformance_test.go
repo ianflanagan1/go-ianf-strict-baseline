@@ -15,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianflanagan1/go-baseline/internal/core/baseline"
+	"github.com/ianflanagan1/go-ianf-strict-baseline/internal/core/baseline"
 )
 
 // issue is what golangci-lint reports, reduced to the linter and the

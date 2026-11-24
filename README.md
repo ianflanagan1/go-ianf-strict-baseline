@@ -1,6 +1,6 @@
-# go-baseline
+# go-ianf-strict-baseline
 
-The settings every Go project shares, and the command that keeps a project on them. It is the Go counterpart of `@ianflanagan1/ts-baseline`; new projects start from [go-template](../go-template).
+The settings every Go project shares, and the command that keeps a project on them. It is the Go counterpart of `@ianflanagan1/ts-ianf-strict-baseline`; new projects start from [go-ianf-strict-template](../go-ianf-strict-template).
 
 ## Starting a project
 
@@ -14,10 +14,10 @@ or, for a library, `task new-library` with the same variables.
 
 The directory must be an absolute path, because devbox runs tasks from this repo's root. The task, in `Taskfile.project.yml`:
 
-1. copies go-template with `gonew`, rewriting the module path in `go.mod` and every import;
-2. for an application, renames `cmd/app` to `cmd/<name>`; for a library, removes `cmd/` and go-template's `Taskfile.project.yml`, with its `build` task, and adds `core/<package>/doc.go`, its package named for the module without a `go-` prefix;
+1. copies go-ianf-strict-template with `gonew`, rewriting the module path in `go.mod` and every import;
+2. for an application, renames `cmd/app` to `cmd/<name>`; for a library, removes `cmd/` and go-ianf-strict-template's `Taskfile.project.yml`, with its `build` task, and adds `core/<package>/doc.go`, its package named for the module without a `go-` prefix;
 3. writes a README skeleton, and removes the licence, so you choose one;
-4. upgrades go-baseline to its latest release, so a project never starts on an old baseline;
+4. upgrades go-ianf-strict-baseline to its latest release, so a project never starts on an old baseline;
 5. generates `.golangci.yml`, `BASELINE.md`, the CI workflow and `Taskfile.yml` for the new module;
 6. runs `devbox run -- task check`;
 7. creates a git repo on `main` with one commit.
@@ -50,7 +50,7 @@ Publish it with `github publish` from repo-tools.
 | No data races in the tests | tests | `test`, with `-race` |
 | No `src/` or `pkg/` at the root, no `util`, `common` or `helpers` package | directories | `verify` |
 
-`devbox run -- task check` runs `go tool go-baseline verify`, then the linters, then `go tool go-baseline test`.
+`devbox run -- task check` runs `go tool go-ianf-strict-baseline verify`, then the linters, then `go tool go-ianf-strict-baseline test`.
 
 ## The layout the linters enforce
 
@@ -75,11 +75,11 @@ Decisions on the common Go analysis tools, recorded 28 October 2026. golangci-li
 | gofumpt | golangci-lint formatter, in place of gofmt |
 | wrapcheck | golangci-lint. Errors from the module's own packages, and in tests, are exempt: they already carry context |
 | `go mod tidy -diff` | `verify` fails when `go.mod` or `go.sum` is untidy |
-| `go test -race` | In `go tool go-baseline test` |
-| govulncheck | In `verify`, through `golang.org/x/vuln/scan`, so its version is pinned in go-baseline's `go.mod` |
+| `go test -race` | In `go tool go-ianf-strict-baseline test` |
+| govulncheck | In `verify`, through `golang.org/x/vuln/scan`, so its version is pinned in go-ianf-strict-baseline's `go.mod` |
 | modernize | golangci-lint; Go is pinned, so newer idioms are always available |
 | nilness | govet analyser, which golangci-lint leaves off by default |
-| deadcode | In `verify`, for modules with a program in `cmd/`, and only under `cmd/` and `internal/`: other modules may use any other package. U1000 can't see that an exported function is unused. It runs from the x/tools that go-baseline's `go.mod` pins |
+| deadcode | In `verify`, for modules with a program in `cmd/`, and only under `cmd/` and `internal/`: other modules may use any other package. U1000 can't see that an exported function is unused. It runs from the x/tools that go-ianf-strict-baseline's `go.mod` pins |
 | gosec | golangci-lint. G204, G304 and G703 are excluded in `cmd/` and adapters, and gosec in tests, in the template rather than with `//nolint` |
 
 ### Not adopted
@@ -120,7 +120,7 @@ golangci-lint can't extend a shared config, so a project can't add its own rules
 
 ## The code rulebook
 
-The [code rulebook](https://github.com/ianflanagan1/code-rulebook) states the rules every language shares, split into clauses. `internal/core/rulebook` records which of go-baseline's checks enforce each clause and the tests that prove it. `rulebook-coverage.json` holds that listing. One test fails when the file is out of date or names a test that doesn't exist; another, `TestTheListingFitsThePinnedRulebook`, runs the pinned release of the rulebook's `check-listing` over it, which fails on a clause that applies to Go and isn't assessed, a role that isn't mapped, or a claim of full or partial coverage without proof.
+The [code rulebook](https://github.com/ianflanagan1/code-rulebook) states the rules every language shares, split into clauses. `internal/core/rulebook` records which of go-ianf-strict-baseline's checks enforce each clause and the tests that prove it. `rulebook-coverage.json` holds that listing. One test fails when the file is out of date or names a test that doesn't exist; another, `TestTheListingFitsThePinnedRulebook`, runs the pinned release of the rulebook's `check-listing` over it, which fails on a clause that applies to Go and isn't assessed, a role that isn't mapped, or a claim of full or partial coverage without proof.
 
 code-rulebook is a private repository, so that test needs Git access to it. Locally, have Git fetch it over SSH: `git config --global url."git@github.com:ianflanagan1/code-rulebook".insteadOf "https://github.com/ianflanagan1/code-rulebook"`. In CI, give the job a token that can read it.
 
@@ -131,19 +131,19 @@ code-rulebook is a private repository, so that test needs Git access to it. Loca
 When a check changes what it enforces, or the baseline moves to a new rulebook release:
 
 1. Bump `rulebookRelease` in `internal/core/rulebook/rulebook_test.go`, if moving.
-2. Assess each clause the test reports. Where an existing check reaches, add the violation to `testdata/conformance` and its expectation to `TestConformance`, or write another test that shows the check catching it. Where catching it needs a check go-baseline doesn't have, such as a new analyzer, record the coverage the existing checks give and write down what the missing check must do; it is built separately. A missing analyzer or `verify` step gets an entry in [docs/analyzers-and-verify-steps-to-build.md](docs/analyzers-and-verify-steps-to-build.md).
+2. Assess each clause the test reports. Where an existing check reaches, add the violation to `testdata/conformance` and its expectation to `TestConformance`, or write another test that shows the check catching it. Where catching it needs a check go-ianf-strict-baseline doesn't have, such as a new analyzer, record the coverage the existing checks give and write down what the missing check must do; it is built separately. A missing analyzer or `verify` step gets an entry in [docs/analyzers-and-verify-steps-to-build.md](docs/analyzers-and-verify-steps-to-build.md).
 3. Update the claim in `internal/core/rulebook/rulebook.go`.
 4. `devbox run -- task rulebook-coverage`, then `check`.
 
 ## Changing a shared setting
 
-1. Change it here: the template in `internal/core/baseline/golangci.yml.tmpl`, the guide in `internal/core/baseline/BASELINE.md`, the tasks in `internal/core/baseline/Taskfile.yml`, or the constants in `baseline.go`. To let the core and orchestrators use a third-party package the dependency check rejects, add it to `dependencyAllowlist` with the reason, after reading the code projects call. When bumping golangci-lint or go-task, change `GolangciLintVersion` or `TaskVersion` and the version in this repo's `devbox.json` together; this repo's own `verify` fails until they agree. When Go ships a release, raise `ToolchainVersion`, then run `devbox run -- go run ./cmd/go-baseline write` here to set this repo's `GOTOOLCHAIN`; a new minor version also moves devbox's `go@` pin and `go.mod`'s `go` line to it. Pin a GitHub Action in `check.yml` by its commit SHA, with the tag in a comment.
+1. Change it here: the template in `internal/core/baseline/golangci.yml.tmpl`, the guide in `internal/core/baseline/BASELINE.md`, the tasks in `internal/core/baseline/Taskfile.yml`, or the constants in `baseline.go`. To let the core and orchestrators use a third-party package the dependency check rejects, add it to `dependencyAllowlist` with the reason, after reading the code projects call. When bumping golangci-lint or go-task, change `GolangciLintVersion` or `TaskVersion` and the version in this repo's `devbox.json` together; this repo's own `verify` fails until they agree. When Go ships a release, raise `ToolchainVersion`, then run `devbox run -- go run ./cmd/go-ianf-strict-baseline write` here to set this repo's `GOTOOLCHAIN`; a new minor version also moves devbox's `go@` pin and `go.mod`'s `go` line to it. Pin a GitHub Action in `check.yml` by its commit SHA, with the tag in a comment.
 2. `devbox run -- task check`, commit, then `github release . minor`.
-3. In go-template and each project:
+3. In go-ianf-strict-template and each project:
 
    ```sh
-   devbox run -- go get -tool github.com/ianflanagan1/go-baseline/cmd/go-baseline@latest
-   devbox run -- go tool go-baseline write
+   devbox run -- go get -tool github.com/ianflanagan1/go-ianf-strict-baseline/cmd/go-ianf-strict-baseline@latest
+   devbox run -- go tool go-ianf-strict-baseline write
    devbox run -- task check
    ```
 
@@ -153,8 +153,8 @@ When a check changes what it enforces, or the baseline moves to a new rulebook r
 
 | Command | What it does |
 |---|---|
-| `go tool go-baseline write` | Writes `.golangci.yml` for the module in `go.mod`, `BASELINE.md` and `.github/workflows/check.yml` |
-| `go tool go-baseline verify` | Lists each way the project differs from the baseline, including I/O dependencies of the core and orchestrators, packages with no role and the analyzers' findings, and fails if there are any |
-| `go tool go-baseline test` | Runs the tests with coverage, and fails if a core package is below 80% |
-| `go tool go-baseline map` | Lists each package's role, the ports the orchestrators declare and the driven adapters that implement them |
-| `go tool go-baseline rulebook` | Prints how the baseline enforces each clause of the [code rulebook](https://github.com/ianflanagan1/code-rulebook), as the coverage listing the rulebook checks |
+| `go tool go-ianf-strict-baseline write` | Writes `.golangci.yml` for the module in `go.mod`, `BASELINE.md` and `.github/workflows/check.yml` |
+| `go tool go-ianf-strict-baseline verify` | Lists each way the project differs from the baseline, including I/O dependencies of the core and orchestrators, packages with no role and the analyzers' findings, and fails if there are any |
+| `go tool go-ianf-strict-baseline test` | Runs the tests with coverage, and fails if a core package is below 80% |
+| `go tool go-ianf-strict-baseline map` | Lists each package's role, the ports the orchestrators declare and the driven adapters that implement them |
+| `go tool go-ianf-strict-baseline rulebook` | Prints how the baseline enforces each clause of the [code rulebook](https://github.com/ianflanagan1/code-rulebook), as the coverage listing the rulebook checks |
