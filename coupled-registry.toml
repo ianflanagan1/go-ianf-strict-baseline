@@ -1,0 +1,20 @@
+version = 1
+
+["COUPLED:coverage-listing-schema:"]
+relations = ["same-shape"]
+files = ["//github.com/ianflanagan1/code-rulebook/schema/coverage.schema.json", "//github.com/ianflanagan1/code-rulebook/internal/core/rulebook/model.go", "//github.com/ianflanagan1/ts-ianf-strict-baseline/src/core/listing.ts", "//github.com/ianflanagan1/php-ianf-strict-baseline/src/Core/RulebookListing.php"]
+why = "code-rulebook checks each baseline's rulebook-coverage.json against its coverage schema and reads it with its Go model, so the listing every baseline writes must have the schema's fields"
+
+["COUPLED:tool-cache-dir:"]
+relations = ["="]
+files = ["//github.com/ianflanagan1/code-rulebook/rulebook/setups/ianf-strict/rules/project/tool-caches-are-ignored.yaml", "//github.com/ianflanagan1/code-rulebook/rulebook/setups/ianf-strict/baselines.md", "//github.com/ianflanagan1/ts-ianf-strict-baseline/src/core/findProblems.ts", "//github.com/ianflanagan1/php-ianf-strict-baseline/src/Core/ProjectProblems.php"]
+
+# Written by coupled --update: each group as it was last reviewed. Don't edit below this line.
+
+[reviewed."COUPLED:coverage-listing-schema:"]
+definition = "a447e6f16e43e735"
+"COUPLED:coverage-listing-schema: rulebook" = { block = "a2a7627cad9a5d6c" }
+
+[reviewed."COUPLED:tool-cache-dir:"]
+definition = "e42e7baec131991b"
+"COUPLED:tool-cache-dir: baseline" = {}

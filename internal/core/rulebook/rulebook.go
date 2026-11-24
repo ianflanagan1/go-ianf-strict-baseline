@@ -13,9 +13,7 @@ import (
 // rulebook to import.
 const ListingPath = "rulebook-coverage.json"
 
-// COUPLED:coverage-listing-schema:[same-shape; //github.com/ianflanagan1/code-rulebook/schema/coverage.schema.json; //github.com/ianflanagan1/code-rulebook/internal/core/rulebook/model.go;
-// //github.com/ianflanagan1/ts-ianf-strict-baseline/src/core/listing.ts;
-// //github.com/ianflanagan1/php-ianf-strict-baseline/src/Core/RulebookListing.php] fields, check kinds and coverage levels
+// COUPLED:coverage-listing-schema: rulebook. Fields, check kinds and coverage levels
 type listing struct {
 	Language string `json:"language"`
 	Baseline string `json:"baseline"`
