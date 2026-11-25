@@ -33,7 +33,7 @@ Publish it with `github publish` from repo-tools.
 | `check`, `lint`, `lint-file`, `test` and `integration` tasks, including the project's own from `Taskfile.project.yml` | `Taskfile.yml` | `verify`: must match byte for byte |
 | The architecture and conventions, with examples, for people and AI agents | `BASELINE.md`, imported by the project's `CLAUDE.md` | `verify`: must match byte for byte |
 | Go pinned to an exact version of the toolchain's minor version, golangci-lint and go-task to the baseline's versions | `devbox.json` packages | `verify` |
-| [coupled-tags-lint](https://github.com/ianflanagan1/coupled-tags), which `check` runs to lint the `COUPLED:` tags | `devbox.json` packages, with the commit pinned in `devbox.lock` | `verify` |
+| [coupled](https://github.com/ianflanagan1/coupled), which `check` runs to check the `COUPLED:` markers | `devbox.json` packages, with the commit pinned in `devbox.lock` | `verify` |
 | `go.mod`'s `go` line is the toolchain's minor version, and `go.mod` has no `toolchain` line | `go.mod` | `verify` |
 | `GOTOOLCHAIN=go<ToolchainVersion>`, the Go release the baseline approves, which Go downloads and checks against the checksum database. Devbox's Go only starts the `go` command and fixes the minor version golangci-lint is built for. `write` sets it | `devbox.json` env | `verify` |
 | No `GOSUMDB`, `GONOSUMDB`, `GONOSUMCHECK`, `GOPRIVATE`, `GOINSECURE` or `GOFLAGS`, which can switch off that check | `devbox.json` env | `verify` |

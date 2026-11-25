@@ -14,7 +14,7 @@ import (
 const goMod = "module example.com/app\n\ngo 1.27\n"
 
 const devbox = `{
-  "packages": ["go@1.27.3", "golangci-lint@` + baseline.GolangciLintVersion + `", "go-task@` + baseline.TaskVersion + `", "` + baseline.CoupledTagsLintPackage + `"],
+  "packages": ["go@1.27.3", "golangci-lint@` + baseline.GolangciLintVersion + `", "go-task@` + baseline.TaskVersion + `", "` + baseline.CoupledPackage + `"],
   "env": {"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"}
 }`
 
@@ -243,7 +243,7 @@ func TestDevboxDriftIsReported(t *testing.T) {
 		{"the toolchain on the PATH if go.mod asks", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `+path"`, "go tool go-ianf-strict-baseline write"},
 		{"another toolchain", `"GOTOOLCHAIN": "go` + baseline.ToolchainVersion + `"`, `"GOTOOLCHAIN": "go1.27.0"`, "go tool go-ianf-strict-baseline write"},
 		{"another go-task", "go-task@" + baseline.TaskVersion, "go-task@3.0.0", "go-task@"},
-		{"no coupled-tags-lint", `, "` + baseline.CoupledTagsLintPackage + `"`, "", baseline.CoupledTagsLintPackage},
+		{"no coupled", `, "` + baseline.CoupledPackage + `"`, "", baseline.CoupledPackage},
 		{"a devbox script", `"env"`, `"shell": {"scripts": {"build": "go build ./..."}}, "env"`, `script "build": move it`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -278,9 +278,9 @@ func TestGoModMustHaveNoToolchainLine(t *testing.T) {
 	}
 }
 
-func TestTheCheckTaskLintsTheCoupledTags(t *testing.T) {
-	if !strings.Contains(string(baseline.Taskfile()), "\n      - coupled-tags-lint\n") {
-		t.Fatal("the check task doesn't run coupled-tags-lint")
+func TestTheCheckTaskChecksTheCoupledMarkers(t *testing.T) {
+	if !strings.Contains(string(baseline.Taskfile()), "\n      - coupled\n") {
+		t.Fatal("the check task doesn't run coupled")
 	}
 }
 

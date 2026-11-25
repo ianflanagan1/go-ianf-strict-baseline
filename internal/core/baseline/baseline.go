@@ -32,10 +32,10 @@ const ToolchainVersion = "1.27.4"
 // the generated Taskfile is written for.
 const TaskVersion = "3.53.1"
 
-// CoupledTagsLintPackage is the devbox package for coupled-tags-lint, which
-// every project's check runs to lint its COUPLED tags, pinned to a release
-// tag. Raising the tag here moves every project to that release.
-const CoupledTagsLintPackage = "github:ianflanagan1/coupled-tags-lint/v0.2.0#coupled-tags-lint"
+// CoupledPackage is the devbox package for coupled, which every project's
+// check runs to check its COUPLED markers, pinned to a release tag. Raising
+// the tag here moves every project to that release.
+const CoupledPackage = "github:ianflanagan1/coupled/v0.3.0#coupled"
 
 // MinCoreCoverage is the statement coverage, in percent, that each core
 // package's tests must reach.
@@ -450,8 +450,8 @@ func devboxPackageProblems(packages []string) []string {
 	if !slices.Contains(packages, "go-task@"+TaskVersion) {
 		problems = append(problems, "devbox.json must pin go-task@"+TaskVersion+", which runs the Taskfile")
 	}
-	if !slices.Contains(packages, CoupledTagsLintPackage) {
-		problems = append(problems, "devbox.json must have "+CoupledTagsLintPackage+", which check runs to lint the COUPLED tags; add it with `devbox add "+CoupledTagsLintPackage+"`")
+	if !slices.Contains(packages, CoupledPackage) {
+		problems = append(problems, "devbox.json must have "+CoupledPackage+", which check runs to check the COUPLED markers; add it with `devbox add "+CoupledPackage+"`")
 	}
 	return problems
 }
